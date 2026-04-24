@@ -668,23 +668,47 @@ std::optional<std::string_view> OpenGLBackend::Init(const Dimension &screen_res)
 	GLint palette_location = _glGetUniformLocation(this->vid_program, "palette");
 	GLint sprite_location = _glGetUniformLocation(this->vid_program, "sprite");
 	GLint screen_location = _glGetUniformLocation(this->vid_program, "screen");
+	this->vid_grade_saturation_loc = _glGetUniformLocation(this->vid_program, "grade_saturation");
+	this->vid_grade_contrast_loc = _glGetUniformLocation(this->vid_program, "grade_contrast");
+	this->vid_grade_gamma_loc = _glGetUniformLocation(this->vid_program, "grade_gamma");
+	this->vid_tone_strength_loc = _glGetUniformLocation(this->vid_program, "tone_strength");
+	this->vid_texel_size_loc = _glGetUniformLocation(this->vid_program, "texel_size");
+	this->vid_sharpen_loc = _glGetUniformLocation(this->vid_program, "sharpen_strength");
 	_glUseProgram(this->vid_program);
 	_glUniform1i(tex_location, 0);     // Texture unit 0.
 	_glUniform1i(palette_location, 1); // Texture unit 1.
 	/* Values that result in no transform. */
 	_glUniform4f(sprite_location, 0.0f, 0.0f, 1.0f, 1.0f);
 	_glUniform2f(screen_location, 1.0f, 1.0f);
+	_glUniform1f(this->vid_grade_saturation_loc, 1.0f);
+	_glUniform1f(this->vid_grade_contrast_loc, 1.0f);
+	_glUniform1f(this->vid_grade_gamma_loc, 1.0f);
+	_glUniform1f(this->vid_tone_strength_loc, 0.0f);
+	_glUniform2f(this->vid_texel_size_loc, 1.0f / _screen.width, 1.0f / _screen.height);
+	_glUniform1f(this->vid_sharpen_loc, 0.0f);
 
 	/* Bind uniforms in palette rendering shader program. */
 	tex_location = _glGetUniformLocation(this->pal_program, "colour_tex");
 	palette_location = _glGetUniformLocation(this->pal_program, "palette");
 	sprite_location = _glGetUniformLocation(this->pal_program, "sprite");
 	screen_location = _glGetUniformLocation(this->pal_program, "screen");
+	this->pal_grade_saturation_loc = _glGetUniformLocation(this->pal_program, "grade_saturation");
+	this->pal_grade_contrast_loc = _glGetUniformLocation(this->pal_program, "grade_contrast");
+	this->pal_grade_gamma_loc = _glGetUniformLocation(this->pal_program, "grade_gamma");
+	this->pal_tone_strength_loc = _glGetUniformLocation(this->pal_program, "tone_strength");
+	this->pal_texel_size_loc = _glGetUniformLocation(this->pal_program, "texel_size");
+	this->pal_sharpen_loc = _glGetUniformLocation(this->pal_program, "sharpen_strength");
 	_glUseProgram(this->pal_program);
 	_glUniform1i(tex_location, 0);     // Texture unit 0.
 	_glUniform1i(palette_location, 1); // Texture unit 1.
 	_glUniform4f(sprite_location, 0.0f, 0.0f, 1.0f, 1.0f);
 	_glUniform2f(screen_location, 1.0f, 1.0f);
+	_glUniform1f(this->pal_grade_saturation_loc, 1.0f);
+	_glUniform1f(this->pal_grade_contrast_loc, 1.0f);
+	_glUniform1f(this->pal_grade_gamma_loc, 1.0f);
+	_glUniform1f(this->pal_tone_strength_loc, 0.0f);
+	_glUniform2f(this->pal_texel_size_loc, 1.0f / _screen.width, 1.0f / _screen.height);
+	_glUniform1f(this->pal_sharpen_loc, 0.0f);
 
 	/* Bind uniforms in remap shader program. */
 	tex_location = _glGetUniformLocation(this->remap_program, "colour_tex");
