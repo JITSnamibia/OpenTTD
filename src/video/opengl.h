@@ -38,7 +38,19 @@ private:
 	GLuint vid_pbo = 0; ///< Pixel buffer object storing the memory used for the video driver to draw to.
 	GLuint vid_texture = 0; ///< Texture handle for the video buffer texture.
 	GLuint vid_program = 0; ///< Shader program for rendering a RGBA video buffer.
+	GLint  vid_grade_saturation_loc = 0; ///< Uniform location for presentation saturation.
+	GLint  vid_grade_contrast_loc = 0; ///< Uniform location for presentation contrast.
+	GLint  vid_grade_gamma_loc = 0; ///< Uniform location for presentation gamma.
+	GLint  vid_tone_strength_loc = 0; ///< Uniform location for tone-mapping strength.
+	GLint  vid_texel_size_loc = 0; ///< Uniform location for presentation texel size.
+	GLint  vid_sharpen_loc = 0; ///< Uniform location for presentation sharpen strength.
 	GLuint pal_program = 0; ///< Shader program for rendering a paletted video buffer.
+	GLint  pal_grade_saturation_loc = 0; ///< Uniform location for presentation saturation.
+	GLint  pal_grade_contrast_loc = 0; ///< Uniform location for presentation contrast.
+	GLint  pal_grade_gamma_loc = 0; ///< Uniform location for presentation gamma.
+	GLint  pal_tone_strength_loc = 0; ///< Uniform location for tone-mapping strength.
+	GLint  pal_texel_size_loc = 0; ///< Uniform location for presentation texel size.
+	GLint  pal_sharpen_loc = 0; ///< Uniform location for presentation sharpen strength.
 	GLuint vao_quad = 0; ///< Vertex array object storing the rendering state for the fullscreen quad.
 	GLuint vbo_quad = 0; ///< Vertex buffer with a fullscreen quad.
 	GLuint pal_texture = 0; ///< Palette lookup texture.
@@ -46,6 +58,8 @@ private:
 	void *anim_buffer = nullptr; ///< Pointer to the mapped animation buffer.
 	GLuint anim_pbo = 0; ///< Pixel buffer object storing the memory used for the animation buffer.
 	GLuint anim_texture = 0; ///< Texture handle for the animation buffer texture.
+	bool linear_screen_filter = false; ///< Apply smoothing when the final framebuffer is scaled.
+	float output_scale_factor = 1.0f; ///< Ratio between output viewport size and internal render size.
 
 	GLuint remap_program = 0; ///< Shader program for blending and rendering a RGBA + remap texture.
 	GLint  remap_sprite_loc = 0; ///< Uniform location for sprite parameters.
@@ -75,6 +89,8 @@ private:
 	bool InitShaders();
 
 	void InternalClearCursorCache();
+	void UpdateVideoBufferFilterMode();
+	void UpdatePresentationUniforms();
 
 	void RenderOglSprite(const OpenGLSprite *gl_sprite, PaletteID pal, int x, int y, ZoomLevel zoom);
 
