@@ -672,7 +672,6 @@ std::optional<std::string_view> OpenGLBackend::Init(const Dimension &screen_res)
 	this->vid_grade_contrast_loc = _glGetUniformLocation(this->vid_program, "grade_contrast");
 	this->vid_grade_gamma_loc = _glGetUniformLocation(this->vid_program, "grade_gamma");
 	this->vid_tone_strength_loc = _glGetUniformLocation(this->vid_program, "tone_strength");
-	this->vid_bloom_strength_loc = _glGetUniformLocation(this->vid_program, "bloom_strength");
 	this->vid_texel_size_loc = _glGetUniformLocation(this->vid_program, "texel_size");
 	this->vid_sharpen_loc = _glGetUniformLocation(this->vid_program, "sharpen_strength");
 	_glUseProgram(this->vid_program);
@@ -685,7 +684,6 @@ std::optional<std::string_view> OpenGLBackend::Init(const Dimension &screen_res)
 	_glUniform1f(this->vid_grade_contrast_loc, 1.0f);
 	_glUniform1f(this->vid_grade_gamma_loc, 1.0f);
 	_glUniform1f(this->vid_tone_strength_loc, 0.0f);
-	_glUniform1f(this->vid_bloom_strength_loc, 0.0f);
 	_glUniform2f(this->vid_texel_size_loc, 1.0f / _screen.width, 1.0f / _screen.height);
 	_glUniform1f(this->vid_sharpen_loc, 0.0f);
 
@@ -698,7 +696,6 @@ std::optional<std::string_view> OpenGLBackend::Init(const Dimension &screen_res)
 	this->pal_grade_contrast_loc = _glGetUniformLocation(this->pal_program, "grade_contrast");
 	this->pal_grade_gamma_loc = _glGetUniformLocation(this->pal_program, "grade_gamma");
 	this->pal_tone_strength_loc = _glGetUniformLocation(this->pal_program, "tone_strength");
-	this->pal_bloom_strength_loc = _glGetUniformLocation(this->pal_program, "bloom_strength");
 	this->pal_texel_size_loc = _glGetUniformLocation(this->pal_program, "texel_size");
 	this->pal_sharpen_loc = _glGetUniformLocation(this->pal_program, "sharpen_strength");
 	_glUseProgram(this->pal_program);
@@ -710,7 +707,6 @@ std::optional<std::string_view> OpenGLBackend::Init(const Dimension &screen_res)
 	_glUniform1f(this->pal_grade_contrast_loc, 1.0f);
 	_glUniform1f(this->pal_grade_gamma_loc, 1.0f);
 	_glUniform1f(this->pal_tone_strength_loc, 0.0f);
-	_glUniform1f(this->pal_bloom_strength_loc, 0.0f);
 	_glUniform2f(this->pal_texel_size_loc, 1.0f / _screen.width, 1.0f / _screen.height);
 	_glUniform1f(this->pal_sharpen_loc, 0.0f);
 
@@ -1094,7 +1090,6 @@ void OpenGLBackend::UpdateVideoBufferFilterMode()
 {
 	GLint viewport[4];
 	_glGetIntegerv(GL_VIEWPORT, viewport);
-	this->output_scale_factor = std::max((float)viewport[2] / _screen.width, (float)viewport[3] / _screen.height);
 
 	const bool scaled_output = viewport[2] != (GLint)_screen.width || viewport[3] != (GLint)_screen.height;
 	if (scaled_output == this->linear_screen_filter) return;
@@ -1112,42 +1107,6 @@ void OpenGLBackend::UpdateVideoBufferFilterMode()
 }
 
 /**
- * Apply presentation uniforms (grading and sharpening) to improve scaled-output quality.
- */
-void OpenGLBackend::UpdatePresentationUniforms()
-{
-	/* Preserve classic output at 1:1; use subtle grading only when scaled. */
-	const float upscale = std::max(1.0f, this->output_scale_factor);
-	const float upscale_strength = std::min(1.0f, std::max(0.0f, (upscale - 1.0f) / 2.0f));
-	const float saturation = this->linear_screen_filter ? (1.06f + 0.06f * upscale_strength) : 1.0f;
-	const float contrast = this->linear_screen_filter ? (1.04f + 0.06f * upscale_strength) : 1.0f;
-	const float gamma = this->linear_screen_filter ? (0.97f - 0.03f * upscale_strength) : 1.0f;
-	const float tone_strength = this->linear_screen_filter ? (0.08f + 0.17f * upscale_strength) : 0.0f;
-	const float bloom_strength = this->linear_screen_filter ? (0.03f + 0.08f * upscale_strength) : 0.0f;
-	const float sharpen = this->linear_screen_filter ? (0.22f + 0.23f * upscale_strength) : 0.0f;
-	const float texel_width = 1.0f / _screen.width;
-	const float texel_height = 1.0f / _screen.height;
-
-	_glUseProgram(this->vid_program);
-	_glUniform1f(this->vid_grade_saturation_loc, saturation);
-	_glUniform1f(this->vid_grade_contrast_loc, contrast);
-	_glUniform1f(this->vid_grade_gamma_loc, gamma);
-	_glUniform1f(this->vid_tone_strength_loc, tone_strength);
-	_glUniform1f(this->vid_bloom_strength_loc, bloom_strength);
-	_glUniform2f(this->vid_texel_size_loc, texel_width, texel_height);
-	_glUniform1f(this->vid_sharpen_loc, sharpen);
-
-	_glUseProgram(this->pal_program);
-	_glUniform1f(this->pal_grade_saturation_loc, saturation);
-	_glUniform1f(this->pal_grade_contrast_loc, contrast);
-	_glUniform1f(this->pal_grade_gamma_loc, gamma);
-	_glUniform1f(this->pal_tone_strength_loc, tone_strength);
-	_glUniform1f(this->pal_bloom_strength_loc, bloom_strength);
-	_glUniform2f(this->pal_texel_size_loc, texel_width, texel_height);
-	_glUniform1f(this->pal_sharpen_loc, sharpen);
-}
-
-/**
  * Render video buffer to the screen.
  */
 void OpenGLBackend::Paint()
@@ -1156,7 +1115,6 @@ void OpenGLBackend::Paint()
 
 	_glDisable(GL_BLEND);
 	this->UpdateVideoBufferFilterMode();
-	this->UpdatePresentationUniforms();
 
 	/* Blit video buffer to screen. */
 	_glActiveTexture(GL_TEXTURE0);
