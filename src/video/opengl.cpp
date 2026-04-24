@@ -1060,6 +1060,29 @@ void OpenGLBackend::UpdatePalette(const Colour *pal, uint first, uint length)
 }
 
 /**
+ * Use nearest filtering for 1:1 output and linear filtering when the framebuffer is scaled.
+ */
+void OpenGLBackend::UpdateVideoBufferFilterMode()
+{
+	GLint viewport[4];
+	_glGetIntegerv(GL_VIEWPORT, viewport);
+
+	const bool scaled_output = viewport[2] != (GLint)_screen.width || viewport[3] != (GLint)_screen.height;
+	if (scaled_output == this->linear_screen_filter) return;
+
+	this->linear_screen_filter = scaled_output;
+	const GLint filter = scaled_output ? GL_LINEAR : GL_NEAREST;
+
+	_glBindTexture(GL_TEXTURE_2D, this->vid_texture);
+	_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+	_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+
+	_glBindTexture(GL_TEXTURE_2D, this->anim_texture);
+	_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+	_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+}
+
+/**
  * Render video buffer to the screen.
  */
 void OpenGLBackend::Paint()
@@ -1067,6 +1090,7 @@ void OpenGLBackend::Paint()
 	_glClear(GL_COLOR_BUFFER_BIT);
 
 	_glDisable(GL_BLEND);
+	this->UpdateVideoBufferFilterMode();
 
 	/* Blit video buffer to screen. */
 	_glActiveTexture(GL_TEXTURE0);
@@ -1358,8 +1382,8 @@ void OpenGLBackend::RenderOglSprite(const OpenGLSprite *gl_sprite, PaletteID pal
 	for (int t = TEX_RGBA; t < NUM_TEX; t++) {
 		_glBindTexture(GL_TEXTURE_2D, OpenGLSprite::dummy_tex[t]);
 
-		_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-		_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 		_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);

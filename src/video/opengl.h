@@ -46,6 +46,7 @@ private:
 	void *anim_buffer = nullptr; ///< Pointer to the mapped animation buffer.
 	GLuint anim_pbo = 0; ///< Pixel buffer object storing the memory used for the animation buffer.
 	GLuint anim_texture = 0; ///< Texture handle for the animation buffer texture.
+	bool linear_screen_filter = false; ///< Apply smoothing when the final framebuffer is scaled.
 
 	GLuint remap_program = 0; ///< Shader program for blending and rendering a RGBA + remap texture.
 	GLint  remap_sprite_loc = 0; ///< Uniform location for sprite parameters.
@@ -75,6 +76,7 @@ private:
 	bool InitShaders();
 
 	void InternalClearCursorCache();
+	void UpdateVideoBufferFilterMode();
 
 	void RenderOglSprite(const OpenGLSprite *gl_sprite, PaletteID pal, int x, int y, ZoomLevel zoom);
 
